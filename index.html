@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="da">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kalenderbygger</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">Kalenderbygger</div>
+
+    <div class="top-actions">
+      <button class="btn" id="resetBtn" type="button" title="Nulstil">
+        <i class="fa-solid fa-rotate-left"></i>
+        <span>Nulstil</span>
+      </button>
+
+      <button class="btn" id="exportJsonBtn" type="button" title="Eksportér opsætning">
+        <i class="fa-solid fa-download"></i>
+        <span>Eksportér</span>
+      </button>
+
+      <label class="btn file-btn" title="Importér opsætning">
+        <i class="fa-solid fa-upload"></i>
+        <span>Importér</span>
+        <input type="file" id="importJson" accept="application/json">
+      </label>
+
+      <button class="btn btn-primary" id="printBtn" type="button" title="Gem som PDF">
+        <i class="fa-solid fa-file-pdf"></i>
+        <span>Gem PDF</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="app-shell">
+    <aside class="settings-panel">
+      <section class="settings-section first-section">
+        <div class="section-title">Kalender</div>
+
+        <label>Visning
+          <select id="viewMode">
+            <option value="day">Dag</option>
+            <option value="multi">Flere dage</option>
+            <option value="week">Uge</option>
+            <option value="month" selected>Måned</option>
+            <option value="year">År</option>
+          </select>
+        </label>
+
+        <label>Startdato
+          <input id="startDate" type="date" value="2026-10-08">
+        </label>
+
+        <div id="multiOptions" class="mode-options" hidden>
+          <div class="mode-label">Flere dage</div>
+          <div class="two-col">
+            <label>Antal dage
+              <input id="daysCount" type="number" min="2" max="31" value="4">
+            </label>
+            <label>Kolonner
+              <input id="multiColumns" type="number" min="1" max="7" value="2">
+            </label>
+          </div>
+        </div>
+
+        <div id="periodOptions" class="mode-options" hidden>
+          <div class="mode-label" id="periodOptionsTitle">Flere måneder</div>
+          <label>Antal perioder
+            <input id="periodCount" type="number" min="1" max="24" value="1">
+          </label>
+        </div>
+
+        <div id="dayOptions" class="mode-options" hidden>
+          <div class="mode-label">Tidspunkt</div>
+          <div class="two-col">
+            <label>Fra kl.
+              <input id="dayStartHour" type="number" min="0" max="23" value="7">
+            </label>
+            <label>Til kl.
+              <input id="dayEndHour" type="number" min="1" max="24" value="18">
+            </label>
+          </div>
+        </div>
+
+        <label>Ugens første dag
+          <select id="weekStartSelect">
+            <option value="1" selected>Mandag</option>
+            <option value="0">Søndag</option>
+            <option value="6">Lørdag</option>
+          </select>
+        </label>
+      </section>
+
+      <section class="settings-section">
+        <div class="section-title">Sprog & datoer</div>
+
+        <label>Kalender-sprog
+          <select id="calendarLocale">
+            <option value="da-DK" selected>Dansk</option>
+            <option value="en-GB">English</option>
+            <option value="en-US">English (US)</option>
+            <option value="de-DE">Deutsch</option>
+            <option value="sv-SE">Svenska</option>
+            <option value="nb-NO">Norsk</option>
+            <option value="fi-FI">Suomi</option>
+            <option value="nl-NL">Nederlands</option>
+            <option value="fr-FR">Français</option>
+            <option value="es-ES">Español</option>
+            <option value="it-IT">Italiano</option>
+            <option value="pt-PT">Português</option>
+            <option value="pl-PL">Polski</option>
+            <option value="cs-CZ">Čeština</option>
+          </select>
+        </label>
+
+        <label>Datoformat
+          <select id="dateOrder">
+            <option value="locale" selected>Som sproget bruger</option>
+            <option value="dmy">DD / MM / YYYY</option>
+            <option value="mdy">MM / DD / YYYY</option>
+            <option value="ymd">YYYY / MM / DD</option>
+          </select>
+        </label>
+      </section>
+
+      <section class="settings-section">
+        <div class="section-title">Papir</div>
+
+        <div class="two-col">
+          <label>Format
+            <select id="paper">
+              <option value="A5">A5</option>
+              <option value="A4">A4</option>
+              <option value="A3" selected>A3</option>
+              <option value="A2">A2</option>
+              <option value="A1">A1</option>
+              <option value="Letter">Letter</option>
+              <option value="Legal">Legal</option>
+            </select>
+          </label>
+
+          <label>Retning
+            <select id="orientation">
+              <option value="portrait">Stående</option>
+              <option value="landscape" selected>Liggende</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="paper-size-readout" id="paperSizeReadout">420 × 297 mm</div>
+      </section>
+
+      <section class="settings-section">
+        <div class="section-title">Layout</div>
+
+        <div class="two-col">
+          <label>Margin mm
+            <input id="margin" type="number" min="0" max="50" step="0.5" value="10">
+          </label>
+          <label>Afstand mm
+            <input id="gap" type="number" min="0" max="20" step="0.5" value="2">
+          </label>
+        </div>
+
+        <label>Afstand under månedens navn mm
+          <input id="titleGap" type="number" min="0" max="50" step="0.5" value="5">
+        </label>
+
+        <label>Dag-felt
+          <select id="dayStyle">
+            <option value="box" selected>Kasse</option>
+            <option value="line">Linje</option>
+            <option value="minimal">Kun dato</option>
+          </select>
+        </label>
+
+        <div class="two-col">
+          <label>Månedsnavn størrelse
+            <input id="titleSize" type="number" min="6" max="60" value="22">
+          </label>
+          <label>Dato-størrelse
+            <input id="dateSize" type="number" min="6" max="48" value="13">
+          </label>
+        </div>
+
+        <div class="two-col">
+          <label>Tekststørrelse
+            <input id="fontSize" type="number" min="5" max="30" value="10">
+          </label>
+          <label>Hjørner
+            <input id="radius" type="number" min="0" max="20" step="0.5" value="0">
+          </label>
+        </div>
+      </section>
+
+      <section class="settings-section">
+        <div class="section-title">Indhold</div>
+
+        <label class="check-row">
+          <input id="showMonthName" type="checkbox" checked>
+          <span>Vis månedens navn</span>
+        </label>
+        <label class="check-row">
+          <input id="showWeekdays" type="checkbox" checked>
+          <span>Vis ugedage</span>
+        </label>
+        <label class="check-row">
+          <input id="showWeekNumbers" type="checkbox">
+          <span>Vis ugenumre</span>
+        </label>
+        <label class="check-row">
+          <input id="showHolidays" type="checkbox" checked>
+          <span>Vis helligdage</span>
+        </label>
+        <label class="check-row">
+          <input id="showHolidayList" type="checkbox">
+          <span>Vis helligdagsliste</span>
+        </label>
+        <label class="check-row">
+          <input id="showSchoolHolidays" type="checkbox">
+          <span>Vis skoleferier</span>
+        </label>
+        <label class="check-row">
+          <input id="showMoon" type="checkbox">
+          <span>Vis månefase</span>
+        </label>
+        <label class="check-row">
+          <input id="shadeWeekends" type="checkbox">
+          <span>Fremhæv weekender</span>
+        </label>
+        <label class="check-row">
+          <input id="showOutsideMonth" type="checkbox">
+          <span>Vis dage fra nabomåned</span>
+        </label>
+        <label class="check-row">
+          <input id="showNotes" type="checkbox" checked>
+          <span>Plads til noter</span>
+        </label>
+      </section>
+
+      <section class="settings-section">
+        <div class="section-title">Helligdage</div>
+
+        <label>Land
+          <select id="holidayCountry">
+            <option value="none">Ingen</option>
+            <option value="DK" selected>Danmark</option>
+            <option value="SE">Sverige</option>
+            <option value="NO">Norge</option>
+            <option value="DE">Tyskland</option>
+            <option value="NL">Holland</option>
+            <option value="FR">Frankrig</option>
+            <option value="ES">Spanien</option>
+            <option value="IT">Italien</option>
+            <option value="GB">Storbritannien</option>
+            <option value="US">USA</option>
+            <option value="FI">Finland</option>
+          </select>
+        </label>
+
+        <div class="custom-event-form">
+          <input id="customDate" type="date">
+          <input id="customText" placeholder="Egen dag / begivenhed">
+          <button class="small-btn" id="addCustom" type="button" title="Tilføj begivenhed">
+            <i class="fa-solid fa-plus"></i>
+          </button>
+        </div>
+
+        <div id="customEvents" class="tag-list"></div>
+      </section>
+
+      <section class="settings-section">
+        <div class="section-title">Udseende</div>
+
+        <div class="color-row">
+          <label>Tekst
+            <input id="textColor" type="color" value="#111111">
+          </label>
+          <label>Linjer
+            <input id="borderColor" type="color" value="#222222">
+          </label>
+          <label>Weekend
+            <input id="weekendColor" type="color" value="#f1f2f4">
+          </label>
+        </div>
+
+        <div class="two-col">
+          <label>Streg mm
+            <input id="borderWidth" type="number" min="0" max="5" step="0.1" value="0.3">
+          </label>
+          <label>Stregtype
+            <select id="borderStyle">
+              <option value="solid" selected>Fast</option>
+              <option value="dashed">Stiplet</option>
+              <option value="dotted">Prikket</option>
+              <option value="none">Ingen</option>
+            </select>
+          </label>
+        </div>
+
+        <label>Skrifttype
+          <select id="fontFamily">
+            <option value="system" selected>System</option>
+            <option value="serif">Serif</option>
+            <option value="mono">Mono</option>
+          </select>
+        </label>
+
+        <label>Månedsnavn placering
+          <select id="titleAlign">
+            <option value="left">Venstre</option>
+            <option value="center" selected>Midt</option>
+            <option value="right">Højre</option>
+          </select>
+        </label>
+      </section>
+    </aside>
+
+    <section class="preview-panel">
+      <div class="preview-toolbar">
+        <div class="preview-meta">
+          <strong>Preview</strong>
+          <span id="sizeLabel">A3 · 420 × 297 mm</span>
+        </div>
+
+        <div class="preview-actions">
+          <button class="toolbar-btn active" id="layoutEditBtn" type="button" title="Redigér layout">
+            <i class="fa-solid fa-up-down-left-right"></i>
+            <span>Layout</span>
+          </button>
+
+          <div class="period-controls" id="periodControls" hidden>
+            <button class="toolbar-btn" id="periodPrev" type="button" title="Forrige periode">
+              <i class="fa-solid fa-chevron-left"></i>
+            </button>
+            <span id="periodLabel">1 / 1</span>
+            <button class="toolbar-btn" id="periodNext" type="button" title="Næste periode">
+              <i class="fa-solid fa-chevron-right"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="preview-stage" id="previewStage">
+        <div class="paper-wrap">
+          <div id="paperPreview" class="paper"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
